@@ -15,3 +15,4 @@ class ApiManager:
         self.auth_api = AuthAPI(session)
         self.user_api = UserAPI(session)
         self.movie_api = MoviesAPI(session)
+

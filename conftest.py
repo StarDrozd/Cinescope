@@ -14,7 +14,6 @@ def admin_auth(api_manager):
     api_manager.auth_api.authenticate(admin_creds)
     yield api_manager
 
-
 @pytest.fixture()
 def test_user():
     """
@@ -103,7 +102,7 @@ def get_params():
     }
     return params
 
-@pytest.fixture()
+@pytest.fixture(scope="session")
 def session():
     """
     Фикстура для создания HTTP-сессии.
