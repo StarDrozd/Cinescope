@@ -1,8 +1,10 @@
 import pytest
 import requests
+
+from conftest import api_manager
 from constants import BASE_URL, HEADERS, REGISTER_ENDPOINT,  LOGIN_ENDPOINT
 from custom_requester.custom_requester import CustomRequester
-from clients.api_manager import ApiManager
+from api.api_manager import ApiManager
 
 class TestAuthAPI:
     def test_register_user(self, api_manager: ApiManager, test_user):
@@ -32,3 +34,22 @@ class TestAuthAPI:
         # Проверки
         assert "accessToken" in response_data, "Токен доступа отсутствует в ответе"
         assert response_data["user"]["email"] == registered_user["email"], "Email не совпадает"
+
+    def test_get_user_info(self, api_manager: ApiManager, test_user):
+        register_response = api_manager.auth_api.register_user(test_user)
+        user_id = register_response.json()["id"]
+
+        admin_creds = ('api1@gmail.com', 'asdqwe123Q')
+        api_manager.auth_api.authenticate(admin_creds)  # авторизация
+
+        response = api_manager.user_api.get_user_info(user_id)
+
+    def test_delete_user(self, api_manager: ApiManager, test_user):
+        register_response = api_manager.auth_api.register_user(test_user)
+        user_id = register_response.json()["id"]
+
+        admin_creds = ('api1@gmail.com', 'asdqwe123Q')
+        api_manager.auth_api.authenticate(admin_creds) #авторизация
+
+        response = api_manager.user_api.delete_user(user_id)
+
