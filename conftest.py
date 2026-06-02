@@ -1,13 +1,21 @@
 import requests
 from faker import Faker
 from constants import BASE_URL, HEADERS, REGISTER_ENDPOINT, LOGIN_ENDPOINT
-from clients.api_manager import ApiManager
+from api.api_manager import ApiManager
 import pytest
 from utils.data_generator import DataGenerator
 from custom_requester.custom_requester import CustomRequester
 faker = Faker()
 
-@pytest.fixture(scope="session")
+@pytest.fixture
+def admin_auth(api_manager):
+    """Авторизация администратора."""
+    admin_creds = ('api1@gmail.com', 'asdqwe123Q')
+    api_manager.auth_api.authenticate(admin_creds)
+    yield api_manager
+
+
+@pytest.fixture()
 def test_user():
     """
     Генерация случайного пользователя для тестов.
@@ -36,39 +44,66 @@ def registered_user():
     return {'email': user_data['email'],
             'password': user_data['password']
             }
-
-@pytest.fixture(scope="session")
-def auth_session(test_user):
-    # Регистрируем нового пользователя
-    register_url = f"{BASE_URL}{REGISTER_ENDPOINT}"
-    response = requests.post(register_url, json=test_user, headers=HEADERS)
-    assert response.status_code == 201, "Ошибка регистрации пользователя"
-
-    # Логинимся для получения токена
-    login_url = f"{BASE_URL}{LOGIN_ENDPOINT}"
-    login_data = {
-        "email": test_user["email"],
-        "password": test_user["password"]
+@pytest.fixture(scope='function')
+def new_movie_data():
+    return {
+        "name": f'About {faker.first_name()} + {faker.last_name()}',
+        "imageUrl": "https://example.com/image.png",
+        "price": 100,
+        "description": f'Absolute cinema about {faker.date()} years and {faker.last_name()}',
+        "location": "SPB",
+        "published": True,
+        "genreId": 1
     }
-    response = requests.post(login_url, json=login_data, headers=HEADERS)
-    assert response.status_code == 200, "Ошибка авторизации"
-
-    # Получаем токен и создаём сессию
-    token = response.json().get("accessToken")
-    assert token is not None, "Токен доступа отсутствует в ответе"
-
-    session = requests.Session()
-    session.headers.update(HEADERS)
-    session.headers.update({"Authorization": f"Bearer {token}"})
-    return session
 
 @pytest.fixture
-def requester():
-    """Фикстура, создающая экземпляр CustomRequester"""
-    session = requests.Session()
-    return CustomRequester(session, BASE_URL)
+def updated_movie_data():
+    return {
+  "name": f"{faker.name()}",
+  "description": f"Movie about {faker.first_name()}",
+  "price": 100,
+  "location": "SPB",
+  "imageUrl": "https://image.url",
+  "published": True,
+  "genreId": faker.random_int(min=1, max=11)
+}
 
-@pytest.fixture(scope="session")
+@pytest.fixture()
+def invalid_movie_data():
+    return {
+        'name': 'invalid',
+        'price': 'invalidprice'
+    }
+
+@pytest.fixture()
+def movie_id(admin_auth):
+    movie = admin_auth.movie_api.create_movie({
+        "name": faker.catch_phrase(),
+        "imageUrl": "https://example.com/image.png",
+        "price": 100,
+        "description": "The story about..",
+        "location": "SPB",
+        "published": True,
+        "genreId": 1
+    })
+    movie_id = movie.json()['id']
+    yield movie_id
+
+@pytest.fixture()
+def get_params():
+    params = {
+        "pageSize": faker.random_int(min=1, max=5),
+        "page": faker.random_int(min=1, max=3),
+        "minPrice": faker.random_int(min=1, max=1000),
+        "maxPrice": faker.random_int(min=1001, max=2000),
+        "locations": faker.random_choices(['SPB', 'MSK']),
+        "published": faker.random_choices([True, False]),
+        "genreId": faker.random_int(min=1, max=3),
+        "createdAt": faker.random_choices(['asc', 'desc']),
+    }
+    return params
+
+@pytest.fixture()
 def session():
     """
     Фикстура для создания HTTP-сессии.
@@ -77,7 +112,7 @@ def session():
     yield http_session
     http_session.close()
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope='function')
 def api_manager(session):
     """
     Фикстура для создания экземпляра ApiManager.
