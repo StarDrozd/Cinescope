@@ -87,6 +87,7 @@ def movie_id(admin_auth):
     })
     movie_id = movie.json()['id']
     yield movie_id
+    admin_auth.movie_api.delete_movie(movie_id)
 
 @pytest.fixture()
 def get_params():
@@ -102,7 +103,7 @@ def get_params():
     }
     return params
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 def session():
     """
     Фикстура для создания HTTP-сессии.

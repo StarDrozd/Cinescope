@@ -3,7 +3,7 @@ from constants import MOVIE_ENDPOINT
 
 class MoviesAPI(CustomRequester):
     def __init__(self, session):
-        super().__init__(session, base_url='https://api.dev-cinescope.coconutqa.ru/')
+        super().__init__(session, base_url='https://api.dev-cinescope.coconutqa.ru')
         self.session = session
 
     def get_movies(self, expected_status=200, params=None):

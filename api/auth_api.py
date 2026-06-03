@@ -6,7 +6,7 @@ class AuthAPI(CustomRequester):
       Класс для работы с аутентификацией.
       """
     def __init__(self, session):
-        super().__init__(session=session, base_url="https://auth.dev-cinescope.coconutqa.ru/")
+        super().__init__(session=session, base_url="https://auth.dev-cinescope.coconutqa.ru")
 
     def register_user(self, user_data, expected_status=201):
         """
