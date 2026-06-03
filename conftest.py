@@ -4,7 +4,6 @@ from constants import BASE_URL, HEADERS, REGISTER_ENDPOINT, LOGIN_ENDPOINT
 from api.api_manager import ApiManager
 import pytest
 from utils.data_generator import DataGenerator
-from custom_requester.custom_requester import CustomRequester
 faker = Faker()
 
 @pytest.fixture
@@ -96,10 +95,10 @@ def get_params():
         "page": faker.random_int(min=1, max=3),
         "minPrice": faker.random_int(min=1, max=1000),
         "maxPrice": faker.random_int(min=1001, max=2000),
-        "locations": faker.random_choices(['SPB', 'MSK']),
-        "published": faker.random_choices([True, False]),
+        "locations": faker.random_element(['SPB', 'MSK']),
+        "published": faker.random_element([True, False]),
         "genreId": faker.random_int(min=1, max=3),
-        "createdAt": faker.random_choices(['asc', 'desc']),
+        "createdAt": faker.random_element(['asc', 'desc']),
     }
     return params
 
