@@ -1,6 +1,6 @@
 import pytest
 import requests
-from conftest import admin_auth, movie_id
+from conftest import  movie_id
 from api.api_manager import ApiManager
 
 class TestMoviesAPI:

@@ -1,5 +1,5 @@
 from custom_requester.custom_requester import CustomRequester
-from constants import MOVIE_ENDPOINT
+from constants.constants import MOVIE_ENDPOINT
 
 class MoviesAPI(CustomRequester):
     def __init__(self, session):

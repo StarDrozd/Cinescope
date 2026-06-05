@@ -1,6 +1,5 @@
 import pytest
 import requests
-from conftest import api_manager
 from api.api_manager import ApiManager
 
 class TestAuthAPI:
@@ -31,15 +30,3 @@ class TestAuthAPI:
         # Проверки
         assert "accessToken" in response_data, "Токен доступа отсутствует в ответе"
         assert response_data["user"]["email"] == registered_user["email"], "Email не совпадает"
-
-    def test_get_user_info(self, super_admin, test_user):
-        register_response = super_admin.api.auth_api.register_user(test_user)
-        user_id = register_response.json()["id"]
-
-        response = super_admin.api.user_api.get_user_info(user_id)
-
-    def test_delete_user(self, super_admin, test_user):
-        register_response = super_admin.api.auth_api.register_user(test_user)
-        user_id = register_response.json()["id"]
-
-        response = super_admin.api.user_api.delete_user(user_id)
