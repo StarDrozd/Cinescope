@@ -6,7 +6,7 @@ class UserAPI(CustomRequester):
     """
 
     def __init__(self, session):
-        super().__init__(session, base_url="https://auth.dev-cinescope.coconutqa.ru/")
+        super().__init__(session, base_url="https://auth.dev-cinescope.coconutqa.ru")
         self.session = session
 
     def get_user_info(self, user_id, expected_status=200):

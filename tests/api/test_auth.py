@@ -1,9 +1,6 @@
 import pytest
 import requests
-
 from conftest import api_manager
-from constants import BASE_URL, HEADERS, REGISTER_ENDPOINT,  LOGIN_ENDPOINT
-from custom_requester.custom_requester import CustomRequester
 from api.api_manager import ApiManager
 
 class TestAuthAPI:
@@ -52,4 +49,3 @@ class TestAuthAPI:
         api_manager.auth_api.authenticate(admin_creds) #авторизация
 
         response = api_manager.user_api.delete_user(user_id)
-
