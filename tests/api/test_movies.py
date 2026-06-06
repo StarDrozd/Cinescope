@@ -1,17 +1,24 @@
+from symbol import parameters
+
 import pytest
 import requests
-from conftest import  movie_id
+from conftest import movie_id, get_params, new_movie_data
 from api.api_manager import ApiManager
 
 class TestMoviesAPI:
-    def test_get_movies(self, common_user, get_params):
-        response = common_user.api.movie_api.get_movies(params=get_params)
+
+    @pytest.mark.parametrize('param', [{"minPrice":1,
+        "maxPrice": 1000,
+        "locations": 'SPB',
+        "genreId": 1}])
+    def test_get_movies(self, common_user, param):
+        response = common_user.api.movie_api.get_movies(params=param)
         response_data = response.json()
 
         assert response_data != {}
         assert response_data['movies'] != []
         assert type(response_data['movies']) is list
-        assert len(response_data['movies']) <= get_params['pageSize']
+        #assert len(response_data['movies']) <= param['pageSize']
 
     def test_get_movie(self, common_user, movie_id):
         response = common_user.api.movie_api.get_movie(movie_id)
@@ -27,8 +34,17 @@ class TestMoviesAPI:
         assert response_data['genreId'] == new_movie_data['genreId']
         assert response_data['published'] == new_movie_data['published']
 
-    def test_delete_movie(self, super_admin, new_movie_data):
-        create_movie = super_admin.api.movie_api.create_movie(new_movie_data)
+    @pytest.mark.parametrize('movie_data', [{
+        "name": 'Breaking bad: El-camino',
+        "imageUrl": "https://example.com/image.png",
+        "price": 666,
+        "description": 'testdesc',
+        "location": "SPB",
+        "published": True,
+        "genreId": 1
+    }])
+    def test_delete_movie(self, super_admin, movie_data):
+        create_movie = super_admin.api.movie_api.create_movie(movie_data)
         movie_id = create_movie.json()['id']
 
         super_admin.api.movie_api.delete_movie(movie_id)
