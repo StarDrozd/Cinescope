@@ -1,20 +1,19 @@
 import pytest
 import requests
 from api.api_manager import ApiManager
+from models.basic_models import RegisterUserResponse
 
 class TestAuthAPI:
-    def test_register_user(self, super_admin, test_user):
-        """
-        Тест на регистрацию пользователя.
-        """
-        response = super_admin.api.auth_api.register_user(test_user)
-        response_data = response.json()
+    def test_register_user(self, api_manager: ApiManager, test_user):
+        # Преобразуем объект в словарь прямо в тесте
+        user_data = test_user.dict()
 
-        # Проверки
-        assert response_data["email"] == test_user["email"], "Email не совпадает"
-        assert "id" in response_data, "ID пользователя отсутствует в ответе"
-        assert "roles" in response_data, "Роли пользователя отсутствуют в ответе"
-        assert "USER" in response_data["roles"], "Роль USER должна быть у пользователя"
+        response = api_manager.auth_api.register_user(user_data=user_data)
+        register_user_response = RegisterUserResponse(**response.json())
+
+        # test_user - объект, обращаемся через точку
+        assert register_user_response.email == test_user.email, "Email не совпадает"
+        assert register_user_response.fullName == test_user.fullName, "FullName не совпадает"
 
     def test_register_and_login_user(self, common_user, registered_user):
         """
