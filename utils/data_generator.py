@@ -80,3 +80,7 @@ class DataGenerator:
             'genre_id': 1,
             'created_at': datetime.datetime.now()
         }
+
+    @staticmethod
+    def generate_random_int(max_value: int) -> int:
+        return faker.random_int(min=1, max=max_value)
