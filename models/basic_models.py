@@ -1,7 +1,7 @@
 from typing import Optional
 import datetime
 import re
-from typing import List
+from typing import List, Dict, Any
 from pydantic import BaseModel, Field, field_validator
 from constants.roles import Roles
 
@@ -47,3 +47,17 @@ class RegisterUserResponse(BaseModel):
         except ValueError:
             raise ValueError("Некорректный формат даты и времени. Ожидается формат ISO 8601.")
         return value
+
+class ExistMovieResponse(BaseModel):
+    id: int
+    name: str
+    price: int
+    description: str
+    imageUrl: str
+    location: str
+    published: bool
+    rating: int
+    genreId: int
+    createdAt: str
+    genre: Dict[str, str]
+    reviews: Optional[List[Dict[str, Any]]] = []

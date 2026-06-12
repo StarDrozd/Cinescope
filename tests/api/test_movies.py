@@ -1,38 +1,51 @@
 from symbol import parameters
-
+from models.basic_models import ExistMovieResponse
+import allure
 import pytest
 import requests
 from conftest import movie_id, get_params, new_movie_data
 from api.api_manager import ApiManager
-
+@pytest.mark.api
 class TestMoviesAPI:
 
-    @pytest.mark.parametrize('param', [{"minPrice":1,
+    @pytest.mark.parametrize('param', [{'pageSize':1,
+        "minPrice":1,
         "maxPrice": 1000,
         "locations": 'SPB',
         "genreId": 1}])
     def test_get_movies(self, common_user, param):
-        response = common_user.api.movie_api.get_movies(params=param)
-        response_data = response.json()
+        with allure.step('Отправка get запроса с параметрами'):
+            response = common_user.api.movie_api.get_movies(params=param)
+            response_data = response.json()
 
-        assert response_data != {}
-        assert response_data['movies'] != []
-        assert type(response_data['movies']) is list
-        #assert len(response_data['movies']) <= param['pageSize']
+        with allure.step('Проверки, что: 1) тело ответа не пустое, 2) тело ответа содержит информацию о фильме, 3) у информации о фильме правильная структура, 4) фильтр по количеству фильмов в запросе работает'):
+            assert response_data != {}
+            assert response_data['movies'] != []
+            assert type(response_data['movies']) is list
+            assert len(response_data['movies']) <= param['pageSize']
 
     def test_get_movie(self, common_user, movie_id):
-        response = common_user.api.movie_api.get_movie(movie_id)
-        response_data = response.json()
+        with allure.step('Отправка get запроса по movie_id'):
+            response = common_user.api.movie_api.get_movie(movie_id)
+            response_data = ExistMovieResponse(**response.json())
 
-        assert  response_data['id'] == movie_id
+        with allure.step('Проверка, что id фильма в ответа совпадает'):
+            assert  response_data.id == movie_id
 
-    def test_create_movie(self, super_admin, new_movie_data):
-        response = super_admin.api.movie_api.create_movie(new_movie_data)
-        response_data = response.json()
+    def test_create_movie(self, super_admin, new_movie_data, db_helper):
+        with allure.step('Отправка post запроса с авторизацией на создание фильма'):
+            response = super_admin.api.movie_api.create_movie(new_movie_data)
+            response_data = ExistMovieResponse(**response.json())
+            movie_id = response.json()['id']
 
-        assert response_data['name'] == new_movie_data['name']
-        assert response_data['genreId'] == new_movie_data['genreId']
-        assert response_data['published'] == new_movie_data['published']
+        with allure.step('Проверки, что фильм создан с корректными данными'):
+            assert response_data.name == new_movie_data['name']
+            assert response_data.genreId == new_movie_data['genreId']
+            assert response_data.published == new_movie_data['published']
+
+        with allure.step('Проверка, что фильм создан после API запроса в бд'):
+            movie_in_db = db_helper.get_movie_by_id(movie_id)
+            assert movie_in_db is not None, 'Фильм не найден в БД'
 
     @pytest.mark.parametrize('movie_data', [{
         "name": 'Breaking bad: El-camino',
@@ -43,54 +56,78 @@ class TestMoviesAPI:
         "published": True,
         "genreId": 1
     }])
-    def test_delete_movie(self, super_admin, movie_data):
-        create_movie = super_admin.api.movie_api.create_movie(movie_data)
-        movie_id = create_movie.json()['id']
+    def test_delete_movie(self, super_admin, movie_data, db_helper):
+        with allure.step('Отправка post запроса с авторизацией на создание фильма с параметрами'):
+            create_movie = super_admin.api.movie_api.create_movie(movie_data)
+            movie_id = create_movie.json()['id']
 
-        super_admin.api.movie_api.delete_movie(movie_id)
+        with allure.step('Отправка delete запроса на удаление фильма по id, ранее созданного фильма'):
+            super_admin.api.movie_api.delete_movie(movie_id)
 
-        checking = super_admin.api.movie_api.get_movie(movie_id, expected_status=404)
-        assert checking.json()['message'] == 'Фильм не найден'
+        with allure.step('Проверка, что фильм действительно удален и его нельзя найти по тому же id'):
+            checking = super_admin.api.movie_api.get_movie(movie_id, expected_status=404)
+            assert checking.json()['message'] == 'Фильм не найден'
 
-    def test_patch_movie(self, super_admin, movie_id, new_movie_data, updated_movie_data):
-        response = super_admin.api.movie_api.patch_movie(movie_id, updated_movie_data)
+        with allure.step('Проверка, что фильм действительно удален в БД и его нельзя найти по тому же id'):
+            movie_in_db = db_helper.get_movie_by_id(movie_id)
+            assert movie_in_db is None, f"Фильм с id {movie_id} всё ещё существует в БД"
 
-        assert response.json()['name'] == updated_movie_data['name']
-        assert response.json()['description'] == updated_movie_data['description']
-        assert response.json()['price'] == updated_movie_data['price']
+    def test_patch_movie(self, super_admin, movie_id, updated_movie_data):
+        with allure.step('Отправка patch запроса на обновление данных о фильме'):
+            response = super_admin.api.movie_api.patch_movie(movie_id, updated_movie_data)
+            response_data = ExistMovieResponse(**response.json())
 
+        with allure.step('Проверки, что данные о фильме действительно обновились'):
+            assert response_data.name == updated_movie_data['name']
+            assert response_data.description == updated_movie_data['description']
+            assert response_data.price == updated_movie_data['price']
+
+@pytest.mark.api
+@pytest.mark.negative
 class TestNegativeMoviesAPI:
     def test_get_nonexistent_movie(self, common_user):
-        movie_id =  88*14 * 37* 51  #делаем несуществующий айди
-        response = common_user.api.movie_api.get_movie(movie_id, expected_status=404)
+        with allure.step('Делаем несуществующий id и отправляем по нему get запрос'):
+            movie_id =  88*14 * 37* 51  #делаем несуществующий айди
+            response = common_user.api.movie_api.get_movie(movie_id, expected_status=404)
 
     def test_create_conflict_movie(self, super_admin, new_movie_data):
-        conflict_data = new_movie_data.copy()
-        conflict_data['name'] = 'Название фильма'
-        response = super_admin.api.movie_api.create_movie(conflict_data, expected_status=409)
-        response_data = response.json()
+        with allure.step('Делаем данные для создания фильма конфликтными (фильм с таким названием уже существует'):
+            conflict_data = new_movie_data.copy()
+            conflict_data['name'] = 'Название фильма'
 
-        assert response_data['error'] == 'Conflict'
-        assert response_data['message'] == "Фильм с таким названием уже существует"
+        with allure.step('Отправка post запроса на создание фильма с конфликтными данными'):
+            response = super_admin.api.movie_api.create_movie(conflict_data, expected_status=409)
+            response_data = response.json()
+
+        with allure.step('Проверки тела ответа ожиданиям'):
+            assert response_data['error'] == 'Conflict'
+            assert response_data['message'] == "Фильм с таким названием уже существует"
 
     def test_create_movie_with_invalid_data(self, super_admin, invalid_movie_data):
-        response = super_admin.api.movie_api.create_movie(invalid_movie_data, expected_status=400)
-        response_data = response.json()
+        with allure.step('Отправка post запроса на создание фильма с неправильными данными'):
+            response = super_admin.api.movie_api.create_movie(invalid_movie_data, expected_status=400)
+            response_data = response.json()
 
-        assert response_data['error'] == "Bad Request"
+        with allure.step('Проверка тела ответа ожиданиям'):
+            assert response_data['error'] == "Bad Request"
 
     def test_create_movie_without_auth(self, common_user, new_movie_data):
-        response = common_user.api.movie_api.create_movie(new_movie_data, expected_status=403)
+        with allure.step('Отправка post запроса на создание фильма без авторизации'):
+            response = common_user.api.movie_api.create_movie(new_movie_data, expected_status=403)
 
     def test_delete_movie_nonexistent_movie(self, super_admin):
-        movie_id = '31f013131'
-        response = super_admin.api.movie_api.delete_movie(movie_id, expected_status=404)
+        with allure.step('Отправка delete запроса на удаление фильма по несуществующему id'):
+            movie_id = '31f013131'
+            response = super_admin.api.movie_api.delete_movie(movie_id, expected_status=404)
 
     def test_delete_movie_without_auth(self, super_admin, common_user, new_movie_data):
-        create_movie = super_admin.api.movie_api.create_movie(new_movie_data, expected_status=201)
-        movie_id = create_movie.json()['id']
+        with allure.step('Отправка post запроса на создание фильма'):
+            create_movie = super_admin.api.movie_api.create_movie(new_movie_data, expected_status=201)
+            movie_id = create_movie.json()['id']
 
-        response = common_user.api.movie_api.delete_movie(movie_id, expected_status=403)
+        with allure.step('Отправка delete запроса на удаление фильма без авторизации'):
+            response = common_user.api.movie_api.delete_movie(movie_id, expected_status=403)
 
     def test_patch_movie_with_invalid_data(self, super_admin, invalid_movie_data, movie_id):
-        response = super_admin.api.movie_api.patch_movie(movie_id, invalid_movie_data, expected_status=400)
+        with allure.step('Отправка patch запроса на обновление данных с некорректными данными'):
+            response = super_admin.api.movie_api.patch_movie(movie_id, invalid_movie_data, expected_status=400)
