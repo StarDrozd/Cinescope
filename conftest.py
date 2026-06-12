@@ -7,19 +7,21 @@ from utils.data_generator import DataGenerator
 from resources.user_creds import SuperAdminCreds
 from entities.user import User
 from constants.roles import Roles
+from models.basic_models import TestUser
 faker = Faker()
 
 @pytest.fixture
-def test_user():
+def test_user() -> TestUser:
+    """Возвращает объект TestUser"""
     random_password = DataGenerator.generate_random_password()
 
-    return {
-        "email": DataGenerator.generate_random_email(),
-        "fullName": DataGenerator.generate_random_name(),
-        "password": random_password,
-        "passwordRepeat": random_password,
-        "roles": [Roles.USER.value]
-    }
+    return TestUser(
+        email=DataGenerator.generate_random_email(),
+        fullName=DataGenerator.generate_random_name(),
+        password=random_password,
+        passwordRepeat=random_password,
+        roles=[Roles.USER]
+    )
 
 @pytest.fixture(scope="function")
 def creation_user_data(test_user):
@@ -156,3 +158,19 @@ def common_user(user_session, super_admin, creation_user_data):
     super_admin.api.user_api.create_user(creation_user_data)
     common_user.api.auth_api.authenticate(common_user.creds)
     return common_user
+
+@pytest.fixture(scope="function")
+def session():
+    """
+    Фикстура для создания HTTP-сессии.
+    """
+    http_session = requests.Session()
+    yield http_session
+    http_session.close()
+
+@pytest.fixture(scope='function')
+def api_manager(session):
+    """
+    Фикстура для создания экземпляра ApiManager.
+    """
+    return ApiManager(session)
