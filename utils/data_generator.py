@@ -1,3 +1,4 @@
+import datetime
 import random
 import string
 from faker import Faker
@@ -42,3 +43,44 @@ class DataGenerator:
         random.shuffle(password)
 
         return ''.join(password)
+
+    """
+    Добавим метод в DataGenerator который сразу делает рандомные данные
+    которые можно сразу передать в метод создания юзера через БД
+    """
+
+    @staticmethod
+    def generate_user_data() -> dict:
+        """Генерирует данные для тестового пользователя"""
+        from uuid import uuid4
+
+        return {
+            'id': f'{uuid4()}',  # генерируем UUID как строку
+            'email': DataGenerator.generate_random_email(),
+            'full_name': DataGenerator.generate_random_name(),
+            'password': DataGenerator.generate_random_password(),
+            'created_at': datetime.datetime.now(),
+            'updated_at': datetime.datetime.now(),
+            'verified': False,
+            'banned': False,
+            'roles': '{USER}'
+        }
+
+    @staticmethod
+    def generate_movie_data() -> dict:
+        return {
+            'id': faker.random_int(min=1, max=555),
+            'name': f'About {faker.first_name()} {faker.last_name()}',
+            'price': faker.random_int(min=100, max=1000),
+            'description': f'Absolute cinema about {faker.date()} years and {faker.last_name()}',
+            'image_url': "https://example.com/image.png",
+            'location': faker.random_element(['SPB', 'MSK']),
+            'published': True,
+            'rating': faker.random_int(min=1, max=10),
+            'genre_id': 1,
+            'created_at': datetime.datetime.now()
+        }
+
+    @staticmethod
+    def generate_random_int(max_value: int) -> int:
+        return faker.random_int(min=1, max=max_value)

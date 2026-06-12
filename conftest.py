@@ -7,7 +7,11 @@ from utils.data_generator import DataGenerator
 from resources.user_creds import SuperAdminCreds
 from entities.user import User
 from constants.roles import Roles
+from sqlalchemy.orm import Session
+from db_requester.db_client import get_db_session
+from db_requester.db_helper import DBHelper
 from models.basic_models import TestUser
+
 faker = Faker()
 
 @pytest.fixture
@@ -159,6 +163,43 @@ def common_user(user_session, super_admin, creation_user_data):
     common_user.api.auth_api.authenticate(common_user.creds)
     return common_user
 
+@pytest.fixture(scope="module")
+def db_session() -> Session:
+    """
+    Фикстура, которая создает и возвращает сессию для работы с базой данных
+    После завершения теста сессия автоматически закрывается
+    """
+    db_session = get_db_session()
+    yield db_session
+    db_session.close()
+
+@pytest.fixture(scope="function")
+def db_helper(db_session) -> DBHelper:
+    """
+    Фикстура для экземпляра хелпера
+    """
+    db_helper = DBHelper(db_session)
+    return db_helper
+
+@pytest.fixture(scope="function")
+def created_test_user(db_helper):
+    """
+    Фикстура, которая создает тестового пользователя в БД
+    и удаляет его после завершения теста
+    """
+    user = db_helper.create_test_user(DataGenerator.generate_user_data())
+    yield user
+    # Cleanup после теста
+    if db_helper.get_user_by_id(user.id):
+        db_helper.delete_user(user)
+
+@pytest.fixture(scope='function')
+def created_movie_data(db_helper):
+    movie = db_helper.create_movie(DataGenerator.generate_movie_data())
+    yield movie
+    if db_helper.get_movie_by_id(movie.id):
+        db_helper.delete_movie(movie)
+        
 @pytest.fixture(scope="function")
 def session():
     """
@@ -174,3 +215,4 @@ def api_manager(session):
     Фикстура для создания экземпляра ApiManager.
     """
     return ApiManager(session)
+
