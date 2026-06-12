@@ -12,7 +12,7 @@ class TestMoviesAPI:
         "minPrice":1,
         "maxPrice": 1000,
         "locations": 'SPB',
-        "genreId": 1}])
+        "genreId": 3}])
     def test_get_movies(self, common_user, param):
         with allure.step('Отправка get запроса с параметрами'):
             response = common_user.api.movie_api.get_movies(params=param)
