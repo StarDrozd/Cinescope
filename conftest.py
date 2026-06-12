@@ -10,19 +10,22 @@ from constants.roles import Roles
 from sqlalchemy.orm import Session
 from db_requester.db_client import get_db_session
 from db_requester.db_helper import DBHelper
+from models.basic_models import TestUser
+
 faker = Faker()
 
 @pytest.fixture
-def test_user():
+def test_user() -> TestUser:
+    """Возвращает объект TestUser"""
     random_password = DataGenerator.generate_random_password()
 
-    return {
-        "email": DataGenerator.generate_random_email(),
-        "fullName": DataGenerator.generate_random_name(),
-        "password": random_password,
-        "passwordRepeat": random_password,
-        "roles": [Roles.USER.value]
-    }
+    return TestUser(
+        email=DataGenerator.generate_random_email(),
+        fullName=DataGenerator.generate_random_name(),
+        password=random_password,
+        passwordRepeat=random_password,
+        roles=[Roles.USER]
+    )
 
 @pytest.fixture(scope="function")
 def creation_user_data(test_user):
@@ -196,3 +199,20 @@ def created_movie_data(db_helper):
     yield movie
     if db_helper.get_movie_by_id(movie.id):
         db_helper.delete_movie(movie)
+        
+@pytest.fixture(scope="function")
+def session():
+    """
+    Фикстура для создания HTTP-сессии.
+    """
+    http_session = requests.Session()
+    yield http_session
+    http_session.close()
+
+@pytest.fixture(scope='function')
+def api_manager(session):
+    """
+    Фикстура для создания экземпляра ApiManager.
+    """
+    return ApiManager(session)
+
