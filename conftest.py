@@ -1,3 +1,5 @@
+from dataclasses import asdict
+
 import requests
 from faker import Faker
 from constants.constants import BASE_URL, REGISTER_ENDPOINT
@@ -15,17 +17,19 @@ from models.basic_models import TestUser
 faker = Faker()
 
 @pytest.fixture
-def test_user() -> TestUser:
+def test_user() -> dict:
     """Возвращает объект TestUser"""
     random_password = DataGenerator.generate_random_password()
 
-    return TestUser(
+    user= TestUser(
         email=DataGenerator.generate_random_email(),
         fullName=DataGenerator.generate_random_name(),
         password=random_password,
         passwordRepeat=random_password,
         roles=[Roles.USER]
     )
+
+    return user.model_dump()
 
 @pytest.fixture(scope="function")
 def creation_user_data(test_user):
