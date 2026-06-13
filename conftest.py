@@ -61,7 +61,7 @@ def new_movie_data():
         "description": f'Absolute cinema about {faker.date()} years and {faker.last_name()}',
         "location": "SPB",
         "published": True,
-        "genreId": 1
+        "genreId": 3
     }
 
 @pytest.fixture
@@ -92,7 +92,7 @@ def movie_id(super_admin):
         "description": "The story about..",
         "location": "SPB",
         "published": True,
-        "genreId": 1
+        "genreId": 3
     })
     movie_id = movie.json()['id']
     yield movie_id
@@ -107,7 +107,7 @@ def get_params():
         "maxPrice": faker.random_int(min=1001, max=2000),
         "locations": faker.random_element(['SPB', 'MSK']),
         "published": faker.random_element([True, False]),
-        "genreId": faker.random_int(min=1, max=3),
+        "genreId": faker.random_int(min=2, max=3),
         "createdAt": faker.random_element(['asc', 'desc']),
     }
     return params

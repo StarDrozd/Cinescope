@@ -54,7 +54,7 @@ class TestMoviesAPI:
         "description": 'testdesc',
         "location": "SPB",
         "published": True,
-        "genreId": 1
+        "genreId": 3
     }])
     def test_delete_movie(self, super_admin, movie_data, db_helper):
         with allure.step('Отправка post запроса с авторизацией на создание фильма с параметрами'):
@@ -90,13 +90,20 @@ class TestNegativeMoviesAPI:
             movie_id =  88*14 * 37* 51  #делаем несуществующий айди
             response = common_user.api.movie_api.get_movie(movie_id, expected_status=404)
 
-    def test_create_conflict_movie(self, super_admin, new_movie_data):
-        with allure.step('Делаем данные для создания фильма конфликтными (фильм с таким названием уже существует'):
-            conflict_data = new_movie_data.copy()
-            conflict_data['name'] = 'Название фильма'
+    @pytest.mark.parametrize('param', [{'pageSize': 1,
+                                        "minPrice": 1,
+                                        "maxPrice": 1000,
+                                        "locations": 'SPB',
+                                        "genreId": 3}])
+    def test_create_conflict_movie(self, super_admin, param, new_movie_data):
+        with allure.step('Ищем существующий фильм'):
+            response = super_admin.api.movie_api.get_movies(params=param)
+            movie_data = response.json()['movies'][0]
+            movie_conflict_name = movie_data['name']
+            new_movie_data['name'] = movie_conflict_name
 
         with allure.step('Отправка post запроса на создание фильма с конфликтными данными'):
-            response = super_admin.api.movie_api.create_movie(conflict_data, expected_status=409)
+            response = super_admin.api.movie_api.create_movie(new_movie_data, expected_status=409)
             response_data = response.json()
 
         with allure.step('Проверки тела ответа ожиданиям'):
