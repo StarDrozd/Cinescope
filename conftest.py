@@ -64,7 +64,7 @@ def new_movie_data(random_genre_id):
 
 @pytest.fixture
 def updated_movie_data(new_movie_data):
-    updated = new_movie_data.copy()
+    updated = new_movie_data.copy(random_genre_id)
     updated.update({
         "name": f"{faker.name()}",
         "description": f"Movie about {faker.first_name()}",
@@ -72,7 +72,7 @@ def updated_movie_data(new_movie_data):
         "location": "MSK",
         "imageUrl": "https://image.url",
         "published": False,
-        "genreId": faker.random_int(min=1, max=11)
+        "genreId": random_genre_id
     })
     return updated
 
