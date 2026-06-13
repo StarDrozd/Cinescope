@@ -51,7 +51,7 @@ def registered_user():
             'password': user_data['password']
             }
 @pytest.fixture(scope='function')
-def new_movie_data():
+def new_movie_data(random_genre_id):
     return {
         "name": f'About {faker.first_name()} + {faker.last_name()}',
         "imageUrl": "https://example.com/image.png",
@@ -59,11 +59,11 @@ def new_movie_data():
         "description": f'Absolute cinema about {faker.date()} years and {faker.last_name()}',
         "location": "SPB",
         "published": True,
-        "genreId": 3
+        "genreId": random_genre_id
     }
 
 @pytest.fixture
-def updated_movie_data():
+def updated_movie_data(random_genre_id):
     return {
   "name": f"{faker.name()}",
   "description": f"Movie about {faker.first_name()}",
@@ -71,7 +71,7 @@ def updated_movie_data():
   "location": "SPB",
   "imageUrl": "https://image.url",
   "published": True,
-  "genreId": faker.random_int(min=1, max=11)
+  "genreId": random_genre_id
 }
 
 @pytest.fixture()
@@ -82,7 +82,7 @@ def invalid_movie_data():
     }
 
 @pytest.fixture()
-def movie_id(super_admin):
+def movie_id(super_admin, random_genre_id):
     movie = super_admin.api.movie_api.create_movie({
         "name": faker.catch_phrase(),
         "imageUrl": "https://example.com/image.png",
@@ -90,14 +90,21 @@ def movie_id(super_admin):
         "description": "The story about..",
         "location": "SPB",
         "published": True,
-        "genreId": 3
+        "genreId": random_genre_id
     })
     movie_id = movie.json()['id']
     yield movie_id
     super_admin.api.movie_api.delete_movie(movie_id)
 
 @pytest.fixture()
-def get_params():
+def random_genre_id():
+    response = requests.get(url='https://api.dev-cinescope.coconutqa.ru/genres')
+    genre_id = faker.random_element(response.json())['id']
+
+    return genre_id
+
+@pytest.fixture()
+def get_params(random_genre_id):
     params = {
         "pageSize": faker.random_int(min=1, max=5),
         "page": faker.random_int(min=1, max=3),
@@ -105,7 +112,7 @@ def get_params():
         "maxPrice": faker.random_int(min=1001, max=2000),
         "locations": faker.random_element(['SPB', 'MSK']),
         "published": faker.random_element([True, False]),
-        "genreId": faker.random_int(min=2, max=3),
+        "genreId": random_genre_id,
         "createdAt": faker.random_element(['asc', 'desc']),
     }
     return params
