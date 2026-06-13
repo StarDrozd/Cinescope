@@ -1,5 +1,3 @@
-from dataclasses import asdict
-
 import requests
 from faker import Faker
 from constants.constants import BASE_URL, REGISTER_ENDPOINT

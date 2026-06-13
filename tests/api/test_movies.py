@@ -1,4 +1,3 @@
-from symbol import parameters
 from models.basic_models import ExistMovieResponse
 import allure
 import pytest
