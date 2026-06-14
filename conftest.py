@@ -1,6 +1,6 @@
 import requests
 from faker import Faker
-from constants.constants import BASE_URL, REGISTER_ENDPOINT
+from constants.constants import BASE_URL, REGISTER_ENDPOINT, GENRES_URL
 from api.api_manager import ApiManager
 import pytest
 from utils.data_generator import DataGenerator
@@ -84,23 +84,16 @@ def invalid_movie_data():
     }
 
 @pytest.fixture()
-def movie_id(super_admin, random_genre_id):
-    movie = super_admin.api.movie_api.create_movie({
-        "name": faker.catch_phrase(),
-        "imageUrl": "https://example.com/image.png",
-        "price": 100,
-        "description": "The story about..",
-        "location": "SPB",
-        "published": True,
-        "genreId": random_genre_id
-    })
+def movie_id(super_admin, new_movie_data):
+    ''' Фикстура, возвращающая movieId заранее созданного фильма для методов, в которых мы передаем movieId (get, delete, patch), чтобы не дублировать в каждом тесте создание фильма и взятие его movieId'''
+    movie = super_admin.api.movie_api.create_movie(new_movie_data)
     movie_id = movie.json()['id']
     yield movie_id
     super_admin.api.movie_api.delete_movie(movie_id)
 
 @pytest.fixture()
 def random_genre_id():
-    response = requests.get(url='https://api.dev-cinescope.coconutqa.ru/genres')
+    response = requests.get(url=GENRES_URL)
     genre_id = faker.random_element(response.json())['id']
 
     return genre_id
