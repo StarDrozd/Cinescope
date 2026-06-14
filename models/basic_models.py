@@ -48,16 +48,62 @@ class RegisterUserResponse(BaseModel):
             raise ValueError("Некорректный формат даты и времени. Ожидается формат ISO 8601.")
         return value
 
+class TestMovie(BaseModel):
+    name: str
+    imageUrl: str = 'https://example.com/image.png'
+    price: int
+    description: str
+    location: str
+    published: bool
+    genreId: int
+
+class EditMovie(BaseModel):
+    name: Optional[str] = None
+    imageUrl: Optional[str] = None
+    price: Optional[int] = None
+    description: Optional[str] = None
+    location: Optional[str] = None
+    published: Optional[bool] = None
+    genreId: Optional[int] = None
+
+class ReviewResponse(BaseModel):
+    userId: str
+    rating: int = Field(ge=0, le=5)
+    text: str
+    hidden: bool
+    createdAt: str
+    user: Dict[str, str]
+
 class ExistMovieResponse(BaseModel):
     id: int
     name: str
     price: int
     description: str
-    imageUrl: str
+    imageUrl: Optional[str] = None
     location: str
     published: bool
-    rating: int
     genreId: int
-    createdAt: str
     genre: Dict[str, str]
-    reviews: Optional[List[Dict[str, Any]]] = []
+    createdAt: str
+    rating: int = Field(ge=0, le=5)
+    reviews: ReviewResponse
+    
+    @field_validator("createdAt")
+    @classmethod
+    def validate_created_at(cls, value: str) -> str:
+        """Проверяет формат ISO 8601 (поддерживает Z на конце)"""
+        try:
+            # Заменяем Z на +00:00 для корректного парсинга
+            normalized = value.replace('Z', '+00:00')
+            datetime.datetime.fromisoformat(normalized)
+        except ValueError:
+            raise ValueError("Некорректный формат даты и времени. Ожидается формат ISO 8601.")
+        return value
+
+class FindAllMoviesResponse(BaseModel):
+    movies: List[ExistMovieResponse]
+    count: int
+    page: int
+    pageSize: int
+    pageCount: int
+
