@@ -1,9 +1,8 @@
-from models.basic_models import ExistMovieResponse
+from models.basic_models import ExistMovieResponse, FindAllMoviesResponse
 import allure
 import pytest
-import requests
-from conftest import movie_id, get_params, new_movie_data
-from api.api_manager import ApiManager
+from conftest import movie_id, new_movie_data
+
 @pytest.mark.api
 class TestMoviesAPI:
 
@@ -15,13 +14,15 @@ class TestMoviesAPI:
     def test_get_movies(self, common_user, param):
         with allure.step('Отправка get запроса с параметрами'):
             response = common_user.api.movie_api.get_movies(params=param)
-            response_data = response.json()
+            response_data = FindAllMoviesResponse(**response.json())
 
-        with allure.step('Проверки, что: 1) тело ответа не пустое, 2) тело ответа содержит информацию о фильме, 3) у информации о фильме правильная структура, 4) фильтр по количеству фильмов в запросе работает'):
+        with allure.step('Проверки, что: 1) тело ответа не пустое, 2) тело ответа содержит информацию о фильме, 3) у информации о фильме правильная структура, 4) фильтры для фильмов в запросе работает'):
             assert response_data != {}
-            assert response_data['movies'] != []
-            assert type(response_data['movies']) is list
-            assert len(response_data['movies']) <= param['pageSize']
+            assert response_data.movies != []
+            assert type(response_data.movies) is list
+            assert len(response_data.movies) <= param['pageSize']
+            assert response_data.movies[0].price >= param['minPrice']
+            assert response_data.movies[0].price <= param['maxPrice']
 
     def test_get_movie(self, common_user, movie_id):
         with allure.step('Отправка get запроса по movie_id'):
