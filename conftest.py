@@ -10,7 +10,7 @@ from constants.roles import Roles
 from sqlalchemy.orm import Session
 from db_requester.db_client import get_db_session
 from db_requester.db_helper import DBHelper
-from models.basic_models import TestUser
+from models.basic_models import TestUser, TestMovie, EditMovie
 
 faker = Faker()
 
@@ -51,20 +51,21 @@ def registered_user():
             'password': user_data['password']
             }
 @pytest.fixture(scope='function')
-def new_movie_data(random_genre_id):
-    return {
-        "name": f'About {faker.first_name()} + {faker.last_name()}',
-        "imageUrl": "https://example.com/image.png",
-        "price": 100,
-        "description": f'Absolute cinema about {faker.date()} years and {faker.last_name()}',
-        "location": "SPB",
-        "published": True,
-        "genreId": random_genre_id
-    }
+def new_movie_data(random_genre_id) -> dict:
+    movie_data = TestMovie(
+        name=f'About {faker.first_name()} {faker.last_name()}',
+        imageUrl="https://example.com/image.png",
+        price=100,
+        description=f'Absolute cinema about {faker.date()} years and {faker.last_name()}',
+        location="SPB",
+        published=True,
+        genreId=random_genre_id
+    )
+    return movie_data.model_dump()
 
 @pytest.fixture
-def updated_movie_data(new_movie_data):
-    updated = new_movie_data.copy(random_genre_id)
+def updated_movie_data(new_movie_data, random_genre_id) -> dict:
+    updated = new_movie_data.copy()
     updated.update({
         "name": f"{faker.name()}",
         "description": f"Movie about {faker.first_name()}",
@@ -74,7 +75,8 @@ def updated_movie_data(new_movie_data):
         "published": False,
         "genreId": random_genre_id
     })
-    return updated
+    updated = EditMovie(**updated)
+    return updated.model_dump()
 
 @pytest.fixture()
 def invalid_movie_data():
@@ -92,7 +94,7 @@ def movie_id(super_admin, new_movie_data):
     super_admin.api.movie_api.delete_movie(movie_id)
 
 @pytest.fixture()
-def random_genre_id():
+def random_genre_id() -> int:
     response = requests.get(url=GENRES_URL)
     genre_id = faker.random_element(response.json())['id']
 
