@@ -1,6 +1,6 @@
 import requests
 from faker import Faker
-from constants.constants import BASE_URL, REGISTER_ENDPOINT, GENRES_URL
+from constants.constants import BASE_URL, REGISTER_ENDPOINT
 from api.api_manager import ApiManager
 import pytest
 from utils.data_generator import DataGenerator
@@ -53,7 +53,7 @@ def registered_user():
 @pytest.fixture(scope='function')
 def new_movie_data(random_genre_id) -> dict:
     movie_data = TestMovie(
-        name=f'About {faker.first_name()} {faker.last_name()}',
+        name=f'About {faker.first_name()} {faker.last_name()}...',
         imageUrl="https://example.com/image.png",
         price=100,
         description=f'Absolute cinema about {faker.date()} years and {faker.last_name()}',
@@ -94,8 +94,8 @@ def movie_id(super_admin, new_movie_data):
     super_admin.api.movie_api.delete_movie(movie_id)
 
 @pytest.fixture()
-def random_genre_id() -> int:
-    response = requests.get(url=GENRES_URL)
+def random_genre_id(common_user) -> int:
+    response = common_user.api.movie_api.get_genres()
     genre_id = faker.random_element(response.json())['id']
 
     return genre_id
