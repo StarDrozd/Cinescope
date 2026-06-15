@@ -1,4 +1,4 @@
-from models.basic_models import ExistMovieResponse, FindAllMoviesResponse
+from models.basic_models import FindOneMovieResponse, FindAllMoviesResponse, MovieResponse
 import allure
 import pytest
 from conftest import movie_id, new_movie_data
@@ -6,28 +6,32 @@ from conftest import movie_id, new_movie_data
 @pytest.mark.api
 class TestMoviesAPI:
 
-    @pytest.mark.parametrize('param', [{'pageSize':1,
-        "minPrice":1,
-        "maxPrice": 1000,
-        "locations": 'SPB',
-        "genreId": 3}])
+    @pytest.mark.parametrize('param', [
+    {"pageSize": 1, "minPrice": 1, "maxPrice": 1000, "locations": "SPB", "genreId": 3},
+    {"pageSize": 17, "minPrice": 5, "maxPrice": 500, "locations": "MSK", "genreId": 2},
+    {"pageSize": 13, "minPrice": 10, "maxPrice": 200, "locations": "SPB", "genreId": 3},
+    ])
     def test_get_movies(self, common_user, param):
         with allure.step('Отправка get запроса с параметрами'):
             response = common_user.api.movie_api.get_movies(params=param)
             response_data = FindAllMoviesResponse(**response.json())
 
-        with allure.step('Проверки, что: 1) тело ответа не пустое, 2) тело ответа содержит информацию о фильме, 3) у информации о фильме правильная структура, 4) фильтры для фильмов в запросе работает'):
-            assert response_data != {}
-            assert response_data.movies != []
-            assert type(response_data.movies) is list
-            assert len(response_data.movies) <= param['pageSize']
-            assert response_data.movies[0].price >= param['minPrice']
-            assert response_data.movies[0].price <= param['maxPrice']
+        with allure.step('Проверка количества фильмов на странице'):
+            assert len(response_data.movies) <= params['pageSize']
+            if response_data.movies:
+                for movie in response_data.movies:
+                    assert params['minPrice'] <= movie.price <= params['maxPrice']
+                    assert movie.location == params['locations']
+                    assert movie.genreId == params['genreId']
+
+        with allure.step('Проверка количества страниц'):
+            expected_pages = (response_data.count + params['pageSize'] - 1) // params['pageSize']
+            assert response_data.pageCount == expected_pages
 
     def test_get_movie(self, common_user, movie_id):
         with allure.step('Отправка get запроса по movie_id'):
             response = common_user.api.movie_api.get_movie(movie_id)
-            response_data = ExistMovieResponse(**response.json())
+            response_data = FindOneMovieResponse(**response.json())
 
         with allure.step('Проверка, что id фильма в ответа совпадает'):
             assert  response_data.id == movie_id
@@ -35,7 +39,7 @@ class TestMoviesAPI:
     def test_create_movie(self, super_admin, new_movie_data, db_helper):
         with allure.step('Отправка post запроса с авторизацией на создание фильма'):
             response = super_admin.api.movie_api.create_movie(new_movie_data)
-            response_data = ExistMovieResponse(**response.json())
+            response_data = MovieResponse(**response.json())
             movie_id = response.json()['id']
 
         with allure.step('Проверки, что фильм создан с корректными данными'):
@@ -48,7 +52,7 @@ class TestMoviesAPI:
             assert movie_in_db is not None, 'Фильм не найден в БД'
 
     @pytest.mark.parametrize('movie_data', [{
-        "name": 'Breaking bad: El-camino',
+        "name": 'Breaking bad: El-camino0',
         "imageUrl": "https://example.com/image.png",
         "price": 666,
         "description": 'testdesc',
@@ -59,10 +63,12 @@ class TestMoviesAPI:
     def test_delete_movie(self, super_admin, movie_data, db_helper):
         with allure.step('Отправка post запроса с авторизацией на создание фильма с параметрами'):
             create_movie = super_admin.api.movie_api.create_movie(movie_data)
-            movie_id = create_movie.json()['id']
+            create_data = MovieResponse(**create_movie.json())
+            movie_id = create_data.id
 
         with allure.step('Отправка delete запроса на удаление фильма по id, ранее созданного фильма'):
-            super_admin.api.movie_api.delete_movie(movie_id)
+            response = super_admin.api.movie_api.delete_movie(movie_id)
+            response_data = MovieResponse(**response.json())
 
         with allure.step('Проверка, что фильм действительно удален и его нельзя найти по тому же id'):
             checking = super_admin.api.movie_api.get_movie(movie_id, expected_status=404)
@@ -75,7 +81,7 @@ class TestMoviesAPI:
     def test_patch_movie(self, super_admin, movie_id, updated_movie_data):
         with allure.step('Отправка patch запроса на обновление данных о фильме'):
             response = super_admin.api.movie_api.patch_movie(movie_id, updated_movie_data)
-            response_data = ExistMovieResponse(**response.json())
+            response_data = MovieResponse(**response.json())
 
         with allure.step('Проверки, что данные о фильме действительно обновились'):
             assert response_data.name == updated_movie_data['name']

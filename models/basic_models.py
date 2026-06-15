@@ -1,6 +1,5 @@
 from typing import Optional
 import datetime
-import re
 from typing import List, Dict, Any
 from pydantic import BaseModel, Field, field_validator
 from constants.roles import Roles
@@ -74,7 +73,20 @@ class ReviewResponse(BaseModel):
     createdAt: str
     user: Dict[str, str]
 
-class ExistMovieResponse(BaseModel):
+class MovieResponse(BaseModel):
+    id: int
+    name: str
+    price: int
+    description: str
+    imageUrl: str
+    location: str
+    published: bool
+    genreId: int
+    genre: Dict[str, str]
+    createdAt: str
+    rating: int
+
+class FindOneMovieResponse(BaseModel):
     id: int
     name: str
     price: int
@@ -86,7 +98,7 @@ class ExistMovieResponse(BaseModel):
     genre: Dict[str, str]
     createdAt: str
     rating: int = Field(ge=0, le=5)
-    reviews: ReviewResponse
+    reviews: Dict[str, str]
     
     @field_validator("createdAt")
     @classmethod
@@ -101,7 +113,7 @@ class ExistMovieResponse(BaseModel):
         return value
 
 class FindAllMoviesResponse(BaseModel):
-    movies: List[ExistMovieResponse]
+    movies: List[MovieResponse]
     count: int
     page: int
     pageSize: int

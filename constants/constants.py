@@ -7,4 +7,4 @@ HEADERS = {
 LOGIN_ENDPOINT = "/login"
 REGISTER_ENDPOINT = "/register"
 MOVIE_ENDPOINT = '/movies'
-GENRES_URL = 'https://api.dev-cinescope.coconutqa.ru/genres'
+GENRES_ENDPOINT = '/genres'
