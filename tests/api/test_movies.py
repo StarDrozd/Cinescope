@@ -17,15 +17,15 @@ class TestMoviesAPI:
             response_data = FindAllMoviesResponse(**response.json())
 
         with allure.step('Проверка количества фильмов на странице'):
-            assert len(response_data.movies) <= params['pageSize']
+            assert len(response_data.movies) <= param['pageSize']
             if response_data.movies:
                 for movie in response_data.movies:
-                    assert params['minPrice'] <= movie.price <= params['maxPrice']
-                    assert movie.location == params['locations']
-                    assert movie.genreId == params['genreId']
+                    assert param['minPrice'] <= movie.price <= param['maxPrice']
+                    assert movie.location == param['locations']
+                    assert movie.genreId == param['genreId']
 
         with allure.step('Проверка количества страниц'):
-            expected_pages = (response_data.count + params['pageSize'] - 1) // params['pageSize']
+            expected_pages = (response_data.count + param['pageSize'] - 1) // param['pageSize']
             assert response_data.pageCount == expected_pages
 
     def test_get_movie(self, common_user, movie_id):
