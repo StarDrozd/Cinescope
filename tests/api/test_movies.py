@@ -43,9 +43,9 @@ class TestMoviesAPI:
             movie_id = response.json()['id']
 
         with allure.step('Проверки, что фильм создан с корректными данными'):
-            assert response_data.name == new_movie_data['name']
-            assert response_data.genreId == new_movie_data['genreId']
-            assert response_data.published == new_movie_data['published']
+            assert response_data.name == new_movie_data.name
+            assert response_data.genreId == new_movie_data.genreId
+            assert response_data.published == new_movie_data.published
 
         with allure.step('Проверка, что фильм создан после API запроса в бд'):
             movie_in_db = db_helper.get_movie_by_id(movie_id)
@@ -84,9 +84,9 @@ class TestMoviesAPI:
             response_data = MovieResponse(**response.json())
 
         with allure.step('Проверки, что данные о фильме действительно обновились'):
-            assert response_data.name == updated_movie_data['name']
-            assert response_data.description == updated_movie_data['description']
-            assert response_data.price == updated_movie_data['price']
+            assert response_data.name == updated_movie_data.name
+            assert response_data.description == updated_movie_data.description
+            assert response_data.price == updated_movie_data.price
 
 @pytest.mark.api
 @pytest.mark.negative
@@ -106,7 +106,7 @@ class TestNegativeMoviesAPI:
             response = super_admin.api.movie_api.get_movies(params=param)
             movie_data = response.json()['movies'][0]
             movie_conflict_name = movie_data['name']
-            new_movie_data['name'] = movie_conflict_name
+            new_movie_data.name = movie_conflict_name
 
         with allure.step('Отправка post запроса на создание фильма с конфликтными данными'):
             response = super_admin.api.movie_api.create_movie(new_movie_data, expected_status=409)

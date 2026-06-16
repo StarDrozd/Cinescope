@@ -2,6 +2,9 @@ import json
 import requests
 import logging
 import os
+from pydantic import BaseModel
+from models.db_models.user import UserDBModel
+
 class CustomRequester:
     """
     Кастомный реквестер для стандартизации и упрощения отправки HTTP-запросов.
@@ -34,6 +37,10 @@ class CustomRequester:
         :return: Объект ответа requests.Response.
         """
         url = f"{self.base_url}{endpoint}"
+        if isinstance(data, BaseModel):
+            data = data.model_dump()
+        elif hasattr(data, 'to_dict') and callable(data.to_dict):  # оставить как есть
+            data = data.to_dict()
         response = self.session.request(method, url, json=data, headers=self.headers, params=params)
         if need_logging:
             self.log_request_and_response(response)

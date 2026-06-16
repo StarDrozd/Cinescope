@@ -15,7 +15,7 @@ from models.basic_models import TestUser, TestMovie, EditMovie
 faker = Faker()
 
 @pytest.fixture
-def test_user() -> dict:
+def test_user() -> TestUser:
     random_password = DataGenerator.generate_random_password()
 
     user= TestUser(
@@ -26,16 +26,11 @@ def test_user() -> dict:
         roles=[Roles.USER]
     )
 
-    return user.model_dump()
+    return user
 
 @pytest.fixture(scope="function")
 def created_user_data(test_user):
-    updated_data = test_user.copy()
-    updated_data.update({
-        "verified": True,
-        "banned": False
-    })
-    return updated_data
+    return test_user.copy(update={"verified": True, "banned": False})
 
 @pytest.fixture
 def registered_user():
@@ -50,7 +45,7 @@ def registered_user():
             'password': user_data['password']
             }
 @pytest.fixture(scope='function')
-def new_movie_data(random_genre_id) -> dict:
+def new_movie_data(random_genre_id) -> TestMovie:
     movie_data = TestMovie(
         name=f'About {faker.first_name()} {faker.last_name()}...',
         imageUrl="https://example.com/image.png",
@@ -60,12 +55,12 @@ def new_movie_data(random_genre_id) -> dict:
         published=True,
         genreId=random_genre_id
     )
-    return movie_data.model_dump()
+    return movie_data
 
 @pytest.fixture
-def updated_movie_data(new_movie_data, random_genre_id) -> dict:
-    updated = new_movie_data.copy()
-    updated.update({
+def updated_movie_data(new_movie_data, random_genre_id) -> EditMovie:
+    updated_dict = new_movie_data.model_dump()
+    updated_dict.update({
         "name": f"{faker.name()}",
         "description": f"Movie about {faker.first_name()}",
         "price": 200,
@@ -74,8 +69,7 @@ def updated_movie_data(new_movie_data, random_genre_id) -> dict:
         "published": False,
         "genreId": random_genre_id
     })
-    updated = EditMovie(**updated)
-    return updated.model_dump()
+    return EditMovie(**updated_dict)
 
 @pytest.fixture()
 def invalid_movie_data():
@@ -146,8 +140,8 @@ def admin(user_session, super_admin, created_user_data):
     new_session = user_session()
 
     admin = User(
-        created_user_data['email'],
-        created_user_data['password'],
+        created_user_data.email,
+        created_user_data.password,
         list(Roles.ADMIN.value),
         new_session)
     super_admin.api.user_api.create_user(created_user_data)
@@ -159,8 +153,8 @@ def common_user(user_session, super_admin, created_user_data):
     new_session = user_session()
 
     common_user = User(
-        created_user_data['email'],
-        created_user_data['password'],
+        created_user_data.email,
+        created_user_data.password,
         list(Roles.USER.value),
         new_session)
 

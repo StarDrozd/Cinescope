@@ -19,8 +19,8 @@ class TestAuthAPI:
         response = api_manager.auth_api.register_user(user_data=test_user)
         register_user_response = RegisterUserResponse(**response.json())
 
-        assert register_user_response.email == test_user['email'], "Email не совпадает"
-        assert register_user_response.fullName == test_user['fullName'], "FullName не совпадает"
+        assert register_user_response.email == test_user.email, "Email не совпадает"
+        assert register_user_response.fullName == test_user.fullName, "FullName не совпадает"
 
     def test_register_and_login_user(self, common_user, registered_user):
         """
