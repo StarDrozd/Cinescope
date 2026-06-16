@@ -16,7 +16,6 @@ faker = Faker()
 
 @pytest.fixture
 def test_user() -> dict:
-    """Возвращает объект TestUser"""
     random_password = DataGenerator.generate_random_password()
 
     user= TestUser(
@@ -30,7 +29,7 @@ def test_user() -> dict:
     return user.model_dump()
 
 @pytest.fixture(scope="function")
-def creation_user_data(test_user):
+def created_user_data(test_user):
     updated_data = test_user.copy()
     updated_data.update({
         "verified": True,
@@ -143,29 +142,29 @@ def super_admin(user_session):
     return super_admin
 
 @pytest.fixture
-def admin(user_session, super_admin, creation_user_data):
+def admin(user_session, super_admin, created_user_data):
     new_session = user_session()
 
     admin = User(
-        creation_user_data['email'],
-        creation_user_data['password'],
+        created_user_data['email'],
+        created_user_data['password'],
         list(Roles.ADMIN.value),
         new_session)
-    super_admin.api.user_api.create_user(creation_user_data)
+    super_admin.api.user_api.create_user(created_user_data)
     admin.api.auth_api.authenticate(admin.creds)
     return admin
 
 @pytest.fixture
-def common_user(user_session, super_admin, creation_user_data):
+def common_user(user_session, super_admin, created_user_data):
     new_session = user_session()
 
     common_user = User(
-        creation_user_data['email'],
-        creation_user_data['password'],
+        created_user_data['email'],
+        created_user_data['password'],
         list(Roles.USER.value),
         new_session)
 
-    super_admin.api.user_api.create_user(creation_user_data)
+    super_admin.api.user_api.create_user(created_user_data)
     common_user.api.auth_api.authenticate(common_user.creds)
     return common_user
 
