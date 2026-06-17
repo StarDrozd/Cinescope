@@ -1,5 +1,5 @@
 from custom_requester.custom_requester import CustomRequester
-from constants.constants import MOVIE_ENDPOINT
+from constants.constants import MOVIE_ENDPOINT, GENRES_ENDPOINT
 
 class MoviesAPI(CustomRequester):
     def __init__(self, session):
@@ -37,6 +37,12 @@ class MoviesAPI(CustomRequester):
             method='PATCH',
             endpoint=MOVIE_ENDPOINT + f'/{movie_id}',
             data=updated_movie_data,
+            expected_status=expected_status
+        )
+    def get_genres(self, expected_status=200):
+        return self.send_request(
+            method='GET',
+            endpoint=GENRES_ENDPOINT,
             expected_status=expected_status
         )
 

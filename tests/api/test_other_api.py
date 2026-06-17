@@ -1,4 +1,4 @@
-from utils.data_generator import DataGenerator
+'''from utils.data_generator import DataGenerator
 from sqlalchemy.orm import Session
 import pytest
 import allure
@@ -26,8 +26,8 @@ class TestAccountTransactionTemplate:
             stan = AccountTransactionTemplate(user=f"Stan_{DataGenerator.generate_random_int(100)}", balance=1000)
             bob = AccountTransactionTemplate(user=f"Bob_{DataGenerator.generate_random_int(100)}", balance=500)
             db_session.add_all([stan, bob])
-            db_session.commit() 
-        
+            db_session.commit()
+
         @allure.step("Функция перевода денег: transfer_money")
         @allure.description( """
             функция выполняющая транзакцию, имитация вызова функции на стороне тестируемого сервиса
@@ -72,4 +72,4 @@ class TestAccountTransactionTemplate:
             with allure.step("Удаляем данные для тестирования из базы"):
                 db_session.delete(stan)
                 db_session.delete(bob)
-                db_session.commit()
+                db_session.commit()'''

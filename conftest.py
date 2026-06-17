@@ -1,5 +1,3 @@
-from dataclasses import asdict
-
 import requests
 from faker import Faker
 from constants.constants import BASE_URL, REGISTER_ENDPOINT
@@ -12,13 +10,12 @@ from constants.roles import Roles
 from sqlalchemy.orm import Session
 from db_requester.db_client import get_db_session
 from db_requester.db_helper import DBHelper
-from models.basic_models import TestUser
+from models.basic_models import TestUser, TestMovie, EditMovie
 
 faker = Faker()
 
 @pytest.fixture
-def test_user() -> dict:
-    """Возвращает объект TestUser"""
+def test_user() -> TestUser:
     random_password = DataGenerator.generate_random_password()
 
     user= TestUser(
@@ -29,16 +26,11 @@ def test_user() -> dict:
         roles=[Roles.USER]
     )
 
-    return user.model_dump()
+    return user
 
 @pytest.fixture(scope="function")
-def creation_user_data(test_user):
-    updated_data = test_user.copy()
-    updated_data.update({
-        "verified": True,
-        "banned": False
-    })
-    return updated_data
+def created_user_data(test_user):
+    return test_user.copy(update={"verified": True, "banned": False})
 
 @pytest.fixture
 def registered_user():
@@ -53,28 +45,31 @@ def registered_user():
             'password': user_data['password']
             }
 @pytest.fixture(scope='function')
-def new_movie_data():
-    return {
-        "name": f'About {faker.first_name()} + {faker.last_name()}',
-        "imageUrl": "https://example.com/image.png",
-        "price": 100,
-        "description": f'Absolute cinema about {faker.date()} years and {faker.last_name()}',
-        "location": "SPB",
-        "published": True,
-        "genreId": 1
-    }
+def new_movie_data(random_genre_id) -> TestMovie:
+    movie_data = TestMovie(
+        name=f'About {faker.first_name()} {faker.last_name()}...',
+        imageUrl="https://example.com/image.png",
+        price=100,
+        description=f'Absolute cinema about {faker.date()} years and {faker.last_name()}',
+        location="SPB",
+        published=True,
+        genreId=random_genre_id
+    )
+    return movie_data
 
 @pytest.fixture
-def updated_movie_data():
-    return {
-  "name": f"{faker.name()}",
-  "description": f"Movie about {faker.first_name()}",
-  "price": 100,
-  "location": "SPB",
-  "imageUrl": "https://image.url",
-  "published": True,
-  "genreId": faker.random_int(min=1, max=11)
-}
+def updated_movie_data(new_movie_data, random_genre_id) -> EditMovie:
+    updated_dict = new_movie_data.model_dump()
+    updated_dict.update({
+        "name": f"{faker.name()}",
+        "description": f"Movie about {faker.first_name()}",
+        "price": 200,
+        "location": "MSK",
+        "imageUrl": "https://image.url",
+        "published": False,
+        "genreId": random_genre_id
+    })
+    return EditMovie(**updated_dict)
 
 @pytest.fixture()
 def invalid_movie_data():
@@ -84,22 +79,22 @@ def invalid_movie_data():
     }
 
 @pytest.fixture()
-def movie_id(super_admin):
-    movie = super_admin.api.movie_api.create_movie({
-        "name": faker.catch_phrase(),
-        "imageUrl": "https://example.com/image.png",
-        "price": 100,
-        "description": "The story about..",
-        "location": "SPB",
-        "published": True,
-        "genreId": 1
-    })
+def movie_id(super_admin, new_movie_data):
+    ''' Фикстура, возвращающая movieId заранее созданного фильма для методов, в которых мы передаем movieId (get, delete, patch), чтобы не дублировать в каждом тесте создание фильма и взятие его movieId'''
+    movie = super_admin.api.movie_api.create_movie(new_movie_data)
     movie_id = movie.json()['id']
     yield movie_id
     super_admin.api.movie_api.delete_movie(movie_id)
 
 @pytest.fixture()
-def get_params():
+def random_genre_id(common_user) -> int:
+    response = common_user.api.movie_api.get_genres()
+    genre_id = faker.random_element(response.json())['id']
+
+    return genre_id
+
+@pytest.fixture()
+def get_params(random_genre_id):
     params = {
         "pageSize": faker.random_int(min=1, max=5),
         "page": faker.random_int(min=1, max=3),
@@ -107,7 +102,7 @@ def get_params():
         "maxPrice": faker.random_int(min=1001, max=2000),
         "locations": faker.random_element(['SPB', 'MSK']),
         "published": faker.random_element([True, False]),
-        "genreId": faker.random_int(min=1, max=3),
+        "genreId": random_genre_id,
         "createdAt": faker.random_element(['asc', 'desc']),
     }
     return params
@@ -141,29 +136,29 @@ def super_admin(user_session):
     return super_admin
 
 @pytest.fixture
-def admin(user_session, super_admin, creation_user_data):
+def admin(user_session, super_admin, created_user_data):
     new_session = user_session()
 
     admin = User(
-        creation_user_data['email'],
-        creation_user_data['password'],
+        created_user_data.email,
+        created_user_data.password,
         list(Roles.ADMIN.value),
         new_session)
-    super_admin.api.user_api.create_user(creation_user_data)
+    super_admin.api.user_api.create_user(created_user_data)
     admin.api.auth_api.authenticate(admin.creds)
     return admin
 
 @pytest.fixture
-def common_user(user_session, super_admin, creation_user_data):
+def common_user(user_session, super_admin, created_user_data):
     new_session = user_session()
 
     common_user = User(
-        creation_user_data['email'],
-        creation_user_data['password'],
+        created_user_data.email,
+        created_user_data.password,
         list(Roles.USER.value),
         new_session)
 
-    super_admin.api.user_api.create_user(creation_user_data)
+    super_admin.api.user_api.create_user(created_user_data)
     common_user.api.auth_api.authenticate(common_user.creds)
     return common_user
 
