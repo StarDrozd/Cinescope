@@ -1,44 +1,30 @@
-import random
-import string
-from faker import Faker
+import time
+import pytest
+from playwright.sync_api import sync_playwright
+import allure
+from utils.data_generator import DataGenerator
+from models.page_object_models import CinescopLoginPage
 
-faker = Faker()
+@allure.epic("Тестирование UI")
+@allure.feature("Тестирование Страницы Login")
+@pytest.mark.ui
+class TestloginPage:
+   @allure.title("Проведение успешного входа в систему")
+   def test_login_by_ui(self, registered_user):
+      with sync_playwright() as playwright:
+           browser = playwright.chromium.launch(headless=False)# Запуск браузера headless=False для визуального отображения
+           page = browser.new_page()
+           login_page = CinescopLoginPage(page)# Создаем объект страницы Login
 
+           login_page.open()
+           login_page.login(registered_user['email'], registered_user['password']) # Осуществяем вход
+           time.sleep(5)
+           login_page.reload_page()
 
-class DataGenerator:
+           login_page.assert_was_redirect_to_home_page() # Проверка редиректа на домашнюю страницу
+           login_page.make_screenshot_and_attach_to_allure() # Прикрепляем скриншот
+           #login_page.assert_allert_was_pop_up() # Проверка появления и исчезновения алерта
 
-    @staticmethod
-    def generate_random_email():
-        random_string = ''.join(random.choices(string.ascii_lowercase + string.digits, k=8))
-        return f"kek{random_string}@gmail.com"
-
-
-    @staticmethod
-    def generate_random_name():
-        return f"{faker.first_name()} {faker.last_name()}"
-
-
-    @staticmethod
-    def generate_random_password():
-        """
-        Генерация пароля, соответствующего требованиям:
-        - Минимум 1 буква.
-        - Минимум 1 цифра.
-        - Допустимые символы.
-        - Длина от 8 до 20 символов.
-        """
-        # Гарантируем наличие хотя бы одной буквы и одной цифры
-        letters = random.choice(string.ascii_letters)  # Одна буква
-        digits = random.choice(string.digits)  # Одна цифра
-
-        # Дополняем пароль случайными символами из допустимого набора
-        special_chars = "?@#$%^&*|:"
-        all_chars = string.ascii_letters + string.digits + special_chars
-        remaining_length = random.randint(6, 18)  # Остальная длина пароля
-        remaining_chars = ''.join(random.choices(all_chars, k=remaining_length))
-
-        # Перемешиваем пароль для рандомизации
-        password = list(letters + digits + remaining_chars)
-        random.shuffle(password)
-
-        return ''.join(password)
+           # Пауза для визуальной проверки (нужно удалить в реальном тестировании)
+           time.sleep(5)
+           browser.close()
