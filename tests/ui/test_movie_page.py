@@ -3,7 +3,13 @@ from faker import Faker
 from playwright.sync_api import sync_playwright
 from models.page_object_models import CinecsopeMoviePage, CinescopLoginPage
 faker = Faker()
-def test_movie_page(movie_id, registered_user):
+
+@allure.epic("Тестирование UI")
+@allure.feature("Тестирование Страницы Movie/id")
+@pytest.mark.ui
+class TestMoviePage:
+@allure.title("Успешное создание отзыва пользователем")
+def test_post_review(movie_id, registered_user):
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch(headless=False)
         page = browser.new_page()
