@@ -138,6 +138,9 @@ class CinescopLoginPage(BasePage):
 
     def assert_allert_was_pop_up(self):
         self.check_pop_up_element_with_text("Вы вошли в аккаунт")
+    
+    def assert_error_was_pop_up(self):
+        self.check_pop_up_element_with_text("Что-то пошло не так")
 
 class CinecsopeMoviePage(BasePage):
     def __init__(self, page: Page, id):
