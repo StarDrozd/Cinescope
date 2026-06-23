@@ -1,7 +1,7 @@
 import time
 from faker import Faker
 from playwright.sync_api import sync_playwright
-from models.page_object_models import CinecsopeFilmPAge, CinescopLoginPage
+from models.page_object_models import CinecsopeMoviePage, CinescopLoginPage
 faker = Faker()
 def test_movie_page(movie_id, registered_user):
     with sync_playwright() as playwright:
@@ -13,7 +13,7 @@ def test_movie_page(movie_id, registered_user):
         time.sleep(3)
         login_page.reload_page()
 
-        movie_page = CinecsopeFilmPAge(page, movie_id)
+        movie_page = CinecsopeMoviePage(page, movie_id)
         movie_page.open()
 
         movie_page.write_review('the best movie ever. 10/10')

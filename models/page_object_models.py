@@ -139,7 +139,7 @@ class CinescopLoginPage(BasePage):
     def assert_allert_was_pop_up(self):
         self.check_pop_up_element_with_text("Вы вошли в аккаунт")
 
-class CinecsopeFilmPAge(BasePage):
+class CinecsopeMoviePage(BasePage):
     def __init__(self, page: Page, id):
         super().__init__(page)
         self.url = f"{self.home_url}movies/{id}"
