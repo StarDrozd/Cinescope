@@ -1,10 +1,11 @@
 from models.page_models.base_page import BasePage
+from constants.constants import REGISTER_ENDPOINT, LOGIN_ENDPOINT
 from playwright.sync_api import Page
 
 class CinescopeRegisterPage(BasePage):
     def __init__(self, page: Page):
         super().__init__(page)
-        self.url = f"{self.home_url}register"
+        self.url = f"{self.home_url}{REGISTER_ENDPOINT}"
 
         # Локаторы элементов
         self.full_name_input = "input[name='fullName']"
@@ -28,7 +29,7 @@ class CinescopeRegisterPage(BasePage):
         self.click_element(self.register_button)
 
     def assert_was_redirect_to_login_page(self):
-        self.wait_redirect_for_url(f"{self.home_url}login")
+        self.wait_redirect_for_url(f"{self.home_url}{LOGIN_ENDPOINT}")
 
     def assert_allert_was_pop_up(self):
         self.check_pop_up_element_with_text("Подтвердите свою почту")

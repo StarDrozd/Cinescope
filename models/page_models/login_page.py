@@ -1,10 +1,11 @@
 from models.page_models.base_page import BasePage
+from constants.constants import LOGIN_ENDPOINT
 from playwright.sync_api import Page
 
 class CinescopeLoginPage(BasePage):
     def __init__(self, page: Page):
         super().__init__(page)
-        self.url = f"{self.home_url}login"
+        self.url = f"{self.home_url}{LOGIN_ENDPOINT}"
 
         # Локаторы элементов
         self.email_input = "input[name='email']"

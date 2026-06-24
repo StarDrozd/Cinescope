@@ -17,7 +17,7 @@ class TestLoginPage:
 
            login_page.open()
            login_page.login(registered_user['email'], registered_user['password']) # Осуществяем вход
-           time.sleep(5)
+           login_page.assert_error_was_pop_up()
            login_page.reload_page()
 
            login_page.assert_was_redirect_to_home_page() # Проверка редиректа на домашнюю страницу
@@ -25,5 +25,4 @@ class TestLoginPage:
            #login_page.assert_allert_was_pop_up() # Проверка появления и исчезновения алерта
 
            # Пауза для визуальной проверки (нужно удалить в реальном тестировании)
-           time.sleep(5)
            browser.close()

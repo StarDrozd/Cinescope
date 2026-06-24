@@ -1,4 +1,5 @@
 from playwright.sync_api import Page
+from constants.constants import HOME_URL, MOVIES_ENDPOINT
 import allure
 
 class PageAction:
@@ -59,7 +60,7 @@ class PageAction:
 class BasePage(PageAction): #Базовая логика доспустимая для всех страниц на сайте
     def __init__(self, page: Page):
         super().__init__(page)
-        self.home_url = "https://dev-cinescope.coconutqa.ru/"
+        self.home_url = HOME_URL
 
         # Общие локаторы для всех страниц на сайте
         self.home_button = "a[href='/' and text()='Cinescope']"
@@ -73,4 +74,4 @@ class BasePage(PageAction): #Базовая логика доспустимая 
     @allure.step("Переход на страницу 'Все фильмы, из шапки сайта'")
     def go_to_all_movies(self):
         self.click_element(self.all_movies_button)
-        self.wait_redirect_for_url(f"{self.home_url}movies")
+        self.wait_redirect_for_url(f"{self.home_url}{MOVIES_ENDPOINT}")

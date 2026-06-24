@@ -1,10 +1,11 @@
 from models.page_models.base_page import BasePage
+from constants.constants import MOVIES_ENDPOINT
 from playwright.sync_api import Page
 
 class CinescopeMoviePage(BasePage):
     def __init__(self, page: Page, id):
         super().__init__(page)
-        self.url = f"{self.home_url}movies/{id}"
+        self.url = f"{self.home_url}{MOVIES_ENDPOINT}/{id}"
 
         self.review_input = "textarea[data-qa-id='movie_review_input']"
 
