@@ -1,6 +1,7 @@
 from models.page_models.base_page import BasePage
 from constants.constants import MOVIES_ENDPOINT
 from playwright.sync_api import Page
+import re
 
 class CinescopeMoviePage(BasePage):
     def __init__(self, page: Page, id):
@@ -29,3 +30,10 @@ class CinescopeMoviePage(BasePage):
 
     def assert_allert_was_pop_up(self):
         self.check_pop_up_element_with_text("Отзыв успешно создан")
+
+    def assert_review_was_posted(self, review_text: str):
+       self.page.get_by_text(review_text).is_visible()
+
+    def assert_review_rating_correct(self, review_text: str, rating):
+        self.page.locator("div").filter(has_text=re.compile(fr"^{review_text}\?Рейтинг: {rating}/5$")).locator("span").is_visible()
+

@@ -12,7 +12,7 @@ faker = Faker()
 class TestMoviePage:
 
     @allure.title("Успешное создание отзыва пользователем")
-    def test_post_review(self, movie_id, registered_user): 
+    def test_post_review(self, movie_id, registered_user, review_text = 'the best movie ever. 10/10', rating = faker.random_int(1,5)):
         with sync_playwright() as playwright:
             browser = playwright.chromium.launch(headless=True)
             page = browser.new_page()
@@ -25,8 +25,10 @@ class TestMoviePage:
             movie_page = CinescopeMoviePage(page, movie_id)
             movie_page.open()
 
-            movie_page.write_review('the best movie ever. 10/10')
-            movie_page.choose_rating(faker.random_int(min=1, max=5))
+            movie_page.write_review(review_text)
+            movie_page.choose_rating(rating)
             movie_page.post_review()
 
             movie_page.assert_allert_was_pop_up()
+            movie_page.assert_review_was_posted(review_text)
+            movie_page.assert_review_rating_correct(review_text, rating)
