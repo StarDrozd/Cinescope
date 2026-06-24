@@ -11,6 +11,14 @@ from sqlalchemy.orm import Session
 from db_requester.db_client import get_db_session
 from db_requester.db_helper import DBHelper
 from models.basic_models import TestUser, TestMovie, EditMovie
+import pytest
+from playwright.sync_api import sync_playwright, Page, expect
+import time
+from pathlib import Path
+from datetime import datetime
+
+DEFAULT_UI_TIMEOUT = 30000  # Пример значения таймаута
+PWDEBUG=1
 
 faker = Faker()
 
@@ -97,7 +105,7 @@ def random_genre_id(common_user) -> int:
 def get_params(random_genre_id):
     params = {
         "pageSize": faker.random_int(min=1, max=5),
-        "page": faker.random_int(min=1, max=3),
+        "page_models": faker.random_int(min=1, max=3),
         "minPrice": faker.random_int(min=1, max=1000),
         "maxPrice": faker.random_int(min=1001, max=2000),
         "locations": faker.random_element(['SPB', 'MSK']),
@@ -214,4 +222,60 @@ def api_manager(session):
     Фикстура для создания экземпляра ApiManager.
     """
     return ApiManager(session)
+
+class Tools:
+    @staticmethod
+    def project_dir():
+        """
+        Возвращает корневую директорию проекта.
+        Предполагается, что текущий файл находится в поддиректории `common`.
+        """
+        return Path(__file__).parent.parent
+
+    @staticmethod
+    def files_dir(nested_directory: str = None, filename: str = None):
+        """
+        Возвращает путь к директории `files` (или её поддиректории).
+        Если директория не существует, она создается.
+        Если указан `filename`, возвращает полный путь к файлу.
+        """
+        files_path = Tools.project_dir() / "files"
+        if nested_directory:
+            files_path = files_path / nested_directory
+        files_path.mkdir(parents=True, exist_ok=True)
+
+        if filename:
+            return files_path / filename
+        return files_path
+
+    @staticmethod
+    def get_timestamp():
+        """
+        Возвращает текущую временную метку в формате YYYY-MM-DD_HH-MM-SS.
+        """
+        return datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+
+@pytest.fixture(scope="session")  # Браузер запускается один раз для всей сессии
+def browser(playwright):
+    browser = playwright.chromium.launch(headless=False)  # headless=True для CI/CD, headless=False для локальной разработки
+    yield browser  # yield возвращает значение фикстуры, выполнение теста продолжится после yield
+    browser.close()  # Браузер закрывается после завершения всех тестов
+
+@pytest.fixture(scope="function")
+def context(browser):
+    context = browser.new_context()
+    context.tracing.start(screenshots=True, snapshots=True, sources=True)
+    context.set_default_timeout(DEFAULT_UI_TIMEOUT)
+    yield context
+    log_name = f"trace_{Tools.get_timestamp()}.zip"
+    trace_path = Tools.files_dir('playwright_trace', log_name)
+    context.tracing.stop(path=trace_path)
+    context.close()
+
+
+@pytest.fixture(scope="function")  # Страница создается для каждого теста
+def page(context):
+    page = context.new_page()
+    yield page  # yield возвращает значение фикстуры, выполнение теста продолжится после yield
+    page.close()  # Страница закрывается после завершения теста
 

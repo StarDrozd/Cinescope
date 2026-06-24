@@ -1,12 +1,13 @@
+from constants.constants import BASE_URL
 from custom_requester.custom_requester import CustomRequester
-
+from constants.constants import BASE_URL
 class UserAPI(CustomRequester):
     """
     Класс для работы с API пользователей.
     """
 
     def __init__(self, session):
-        super().__init__(session, base_url="https://auth.dev-cinescope.coconutqa.ru")
+        super().__init__(session, base_url=BASE_URL)
         self.session = session
 
     def get_user(self, user_locator, expected_status=200):

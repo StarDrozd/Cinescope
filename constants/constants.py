@@ -1,3 +1,4 @@
+HOME_URL = 'https://dev-cinescope.coconutqa.ru'
 BASE_URL = "https://auth.dev-cinescope.coconutqa.ru/"
 HEADERS = {
     "Content-Type": "application/json",
@@ -6,5 +7,5 @@ HEADERS = {
 
 LOGIN_ENDPOINT = "/login"
 REGISTER_ENDPOINT = "/register"
-MOVIE_ENDPOINT = '/movies'
+MOVIES_ENDPOINT = '/movies'
 GENRES_ENDPOINT = '/genres'
