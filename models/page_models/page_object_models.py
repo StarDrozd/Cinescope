@@ -1,9 +1,6 @@
 from playwright.sync_api import Page
 import allure
 
-from conftest import movie_id
-
-
 class PageAction:
     def __init__(self, page: Page):
         self.page = page
@@ -77,96 +74,3 @@ class BasePage(PageAction): #Базовая логика доспустимая 
     def go_to_all_movies(self):
         self.click_element(self.all_movies_button)
         self.wait_redirect_for_url(f"{self.home_url}movies")
-
-
-class CinescopRegisterPage(BasePage):
-    def __init__(self, page: Page):
-        super().__init__(page)
-        self.url = f"{self.home_url}register"
-
-        # Локаторы элементов
-        self.full_name_input = "input[name='fullName']"
-        self.email_input = "input[name='email']"
-        self.password_input = "input[name='password']"
-        self.repeat_password_input = "input[name='passwordRepeat']"
-
-        self.register_button = "button[data-qa-id='register_submit_button']"
-        self.sign_button = "a[href='/login' and text()='Войти']"
-
-    # Локальные action методы
-    def open(self):
-        self.open_url(self.url)
-
-    def register(self, full_name: str, email: str, password: str, confirm_password: str):
-        self.enter_text_to_element(self.full_name_input, full_name)
-        self.enter_text_to_element(self.email_input, email)
-        self.enter_text_to_element(self.password_input, password)
-        self.enter_text_to_element(self.repeat_password_input, confirm_password)
-
-        self.click_element(self.register_button)
-
-    def assert_was_redirect_to_login_page(self):
-        self.wait_redirect_for_url(f"{self.home_url}login")
-
-    def assert_allert_was_pop_up(self):
-        self.check_pop_up_element_with_text("Подтвердите свою почту")
-
-
-class CinescopLoginPage(BasePage):
-    def __init__(self, page: Page):
-        super().__init__(page)
-        self.url = f"{self.home_url}login"
-
-        # Локаторы элементов
-        self.email_input = "input[name='email']"
-        self.password_input = "input[name='password']"
-
-        self.login_button = "button[data-qa-id='login_submit_button']"
-        self.register_button = "a[href='/register' and text()='Зарегистрироваться']"
-
-    # Локальные action методы
-    def open(self):
-        self.open_url(self.url)
-
-    def login(self, email: str, password: str):
-        self.enter_text_to_element(self.password_input, password)
-        self.enter_text_to_element(self.email_input, email)
-        self.click_element(self.login_button)
-
-    def assert_was_redirect_to_home_page(self):
-        self.wait_redirect_for_url(self.home_url)
-
-    def assert_allert_was_pop_up(self):
-        self.check_pop_up_element_with_text("Вы вошли в аккаунт")
-    
-    def assert_error_was_pop_up(self):
-        self.check_pop_up_element_with_text("Что-то пошло не так")
-
-class CinecsopeMoviePage(BasePage):
-    def __init__(self, page: Page, id):
-        super().__init__(page)
-        self.url = f"{self.home_url}movies/{id}"
-
-        self.review_input = "textarea[data-qa-id='movie_review_input']"
-
-        self.rating_button = "button[role='combobox']:has(span[data-qa-id='movie_rating_select'])"
-        self.review_botton = "button[data-qa-id='movie_review_submit_button']"
-
-    def open(self):
-        self.open_url(self.url)
-
-    def write_review(self, text_of_review: str):
-        self.enter_text_to_element(self.review_input, text_of_review)
-
-    def choose_rating(self, rating):
-        self.click_element(self.rating_button)
-
-        option = self.page.locator(f"div[role='option']:has-text('{rating}')")
-        option.click()
-
-    def post_review(self):
-        self.click_element(self.review_botton)
-
-    def assert_allert_was_pop_up(self):
-        self.check_pop_up_element_with_text("Отзыв успешно создан")
-

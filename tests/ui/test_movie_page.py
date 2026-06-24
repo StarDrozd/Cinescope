@@ -1,10 +1,9 @@
-import time
-import allure                
+import allure
 import pytest               
 from faker import Faker
 from playwright.sync_api import sync_playwright
-from models.page_object_models import CinecsopeMoviePage, CinescopLoginPage
-
+from models.page_models.login_page import CinescopeLoginPage
+from models.page_models.movie_page import CinescopeMoviePage
 faker = Faker()
 
 @allure.epic("Тестирование UI")
@@ -17,13 +16,13 @@ class TestMoviePage:
         with sync_playwright() as playwright:
             browser = playwright.chromium.launch(headless=True)
             page = browser.new_page()
-            login_page = CinescopLoginPage(page)
+            login_page = CinescopeLoginPage(page)
             login_page.open()
             login_page.login(registered_user['email'], registered_user['password'])
             login_page.assert_error_was_pop_up()
             login_page.reload_page()
 
-            movie_page = CinecsopeMoviePage(page, movie_id)
+            movie_page = CinescopeMoviePage(page, movie_id)
             movie_page.open()
 
             movie_page.write_review('the best movie ever. 10/10')

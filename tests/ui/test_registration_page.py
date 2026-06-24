@@ -2,7 +2,7 @@ import time
 from playwright.sync_api import sync_playwright
 import allure
 import pytest
-from models.page_object_models import CinescopRegisterPage
+from models.page_models.register_page import CinescopeRegisterPage
 from utils.data_generator import DataGenerator
 
 
@@ -21,7 +21,7 @@ class TestRegisterPage:
            browser = playwright.chromium.launch(headless=False)  # Запуск браузера headless=False для визуального отображения
            page = browser.new_page()
 
-           register_page = CinescopRegisterPage(page) # Создаем объект страницы регистрации cinescope
+           register_page = CinescopeRegisterPage(page) # Создаем объект страницы регистрации cinescope
            register_page.open()
            register_page.register(f"PlaywrightTest {random_name}", random_email, random_password, random_password)# Выполняем регистрацию
 

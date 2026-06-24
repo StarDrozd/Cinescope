@@ -105,7 +105,7 @@ def random_genre_id(common_user) -> int:
 def get_params(random_genre_id):
     params = {
         "pageSize": faker.random_int(min=1, max=5),
-        "page": faker.random_int(min=1, max=3),
+        "page_models": faker.random_int(min=1, max=3),
         "minPrice": faker.random_int(min=1, max=1000),
         "maxPrice": faker.random_int(min=1001, max=2000),
         "locations": faker.random_element(['SPB', 'MSK']),
