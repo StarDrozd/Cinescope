@@ -17,14 +17,14 @@ class TestMoviePage:
             browser = playwright.chromium.launch(headless=True)
             page = browser.new_page()
             login_page = CinescopeLoginPage(page)
+            movie_page = CinescopeMoviePage(page, movie_id)
+
             login_page.open()
             login_page.login(registered_user['email'], registered_user['password'])
             login_page.assert_error_was_pop_up()
             login_page.reload_page()
 
-            movie_page = CinescopeMoviePage(page, movie_id)
             movie_page.open()
-
             movie_page.write_review(review_text)
             movie_page.choose_rating(rating)
             movie_page.post_review()
