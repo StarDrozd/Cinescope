@@ -1,4 +1,4 @@
-from models.page_models.page_object_models import BasePage
+from models.page_models.base_page import BasePage
 from playwright.sync_api import Page
 
 class CinescopeMoviePage(BasePage):
