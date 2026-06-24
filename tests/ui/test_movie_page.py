@@ -32,3 +32,5 @@ class TestMoviePage:
             movie_page.assert_allert_was_pop_up()
             movie_page.assert_review_was_posted(review_text)
             movie_page.assert_review_rating_correct(review_text, rating)
+
+            browser.close()
